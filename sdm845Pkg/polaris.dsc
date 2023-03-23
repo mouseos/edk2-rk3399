@@ -16,5 +16,5 @@
   gArmTokenSpaceGuid.PcdSystemMemorySize|0x40000000
 
   # Adjust your framebuffer size here
-  gsdm845PkgTokenSpaceGuid.PcdMipiFrameBufferWidth|1440
-  gsdm845PkgTokenSpaceGuid.PcdMipiFrameBufferHeight|900
+  gsdm845PkgTokenSpaceGuid.PcdMipiFrameBufferWidth|1920
+  gsdm845PkgTokenSpaceGuid.PcdMipiFrameBufferHeight|1200
