@@ -33,7 +33,7 @@ commit:cfdc7f907d545b14302295b819ea078bc36c6a40
 ```bash
 mkdir workspace-edk2
 cd workspace-edk2
-git clone https://github.com/tianocore/edk2.git -o 3a3713e62cfad00d78bb938b0d9fb1eedaeff314 --recursive --depth=1
+git clone https://github.com/tianocore/edk2.git -b edk2-stable201911 --recursive --depth=1
 git clone https://github.com/tianocore/edk2-platforms.git -o cfdc7f907d545b14302295b819ea078bc36c6a40 --recursive --depth=1
 ```
 
