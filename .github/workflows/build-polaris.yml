@@ -1,0 +1,88 @@
+name: Build Polaris UEFI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout edk2-rk3399
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+
+      - name: Install host dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential uuid-dev nasm acpica-tools wget xz-utils
+
+      - name: Checkout edk2
+        uses: actions/checkout@v4
+        with:
+          repository: tianocore/edk2
+          ref: 3a3713e62cfad00d78bb938b0d9fb1eedaeff314
+          path: edk2
+          submodules: recursive
+
+      - name: Checkout edk2-platforms
+        uses: actions/checkout@v4
+        with:
+          repository: tianocore/edk2-platforms
+          ref: cfdc7f907d545b14302295b819ea078bc36c6a40
+          path: edk2-platforms
+
+      - name: Apply edk2 compatibility patch
+        run: |
+          bash "$GITHUB_WORKSPACE/apply-edk2-patches.sh" "$GITHUB_WORKSPACE/edk2"
+        working-directory: ${{ github.workspace }}
+
+      - name: Set up Python venv
+        run: |
+          python -m venv .venv-edk38
+          . .venv-edk38/bin/activate
+          python --version
+        working-directory: ${{ github.workspace }}
+
+      - name: Download Linaro AArch64 GCC 7.5
+        run: |
+          mkdir -p toolchains
+          cd toolchains
+          wget -c https://releases.linaro.org/components/toolchain/binaries/7.5-2019.12/aarch64-linux-gnu/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz
+          tar -xJf gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz
+          ./gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc --version | sed -n '1p'
+        working-directory: ${{ github.workspace }}
+
+      - name: Build BaseTools and Polaris firmware
+        shell: bash
+        run: |
+          set -euo pipefail
+          . .venv-edk38/bin/activate
+          export PYTHON_COMMAND="$PWD/.venv-edk38/bin/python"
+          export PACKAGES_PATH="$GITHUB_WORKSPACE/edk2:$GITHUB_WORKSPACE/edk2-platforms:$PWD"
+          export WORKSPACE="$PWD/workspace"
+          source "$GITHUB_WORKSPACE/edk2/edksetup.sh"
+          mkdir -p "$WORKSPACE"
+          export PATH="$GITHUB_WORKSPACE/toolchains/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu/bin:$PATH"
+          make -C "$GITHUB_WORKSPACE/edk2/BaseTools" -j"$(nproc)" \
+            BUILD_CFLAGS="-MD -fshort-wchar -fno-strict-aliasing -fwrapv -fno-delete-null-pointer-checks -Wall -Werror -Wno-error=use-after-free -Wno-error=dangling-pointer -Wno-error=array-bounds -Wno-error=stringop-overflow -Wno-error=stringop-overread -Wno-error=vla-parameter -Wno-deprecated-declarations -Wno-stringop-truncation -Wno-restrict -Wno-unused-result -nostdlib -g -O2" \
+            BUILD_CXXFLAGS="-Wno-unused-result -Wno-register -O2"
+          GCC5_AARCH64_PREFIX="$GITHUB_WORKSPACE/toolchains/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-" \
+            build -s -n 0 -a AARCH64 -t GCC5 -p sdm845Pkg/polaris.dsc -b DEBUG
+          ls -lh workspace/Build/sdm845Pkg/DEBUG_GCC5/FV/SDM845PKG_UEFI.fd
+        working-directory: ${{ github.workspace }}
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: polaris-uefi-fd
+          path: workspace/Build/sdm845Pkg/DEBUG_GCC5/FV/SDM845PKG_UEFI.fd

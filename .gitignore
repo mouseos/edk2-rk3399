@@ -1,8 +1,9 @@
 
 workspace
+.venv-edk2/
+.venv-edk38/
 sdm845Pkg/AcpiTables/3399.*
 sdm845Pkg/AcpiTables/*.tar.gz
 sdm845Pkg/AcpiTables/minimal
 sdm845Pkg/AcpiTables/test*
 sdm845Pkg/FdtBlob/*.bak
-
