@@ -70,7 +70,9 @@ jobs:
           export PYTHON_COMMAND="$PWD/.venv-edk38/bin/python"
           export PACKAGES_PATH="$GITHUB_WORKSPACE/edk2:$GITHUB_WORKSPACE/edk2-platforms:$PWD"
           export WORKSPACE="$PWD/workspace"
+          set +u
           source "$GITHUB_WORKSPACE/edk2/edksetup.sh"
+          set -u
           mkdir -p "$WORKSPACE"
           export PATH="$GITHUB_WORKSPACE/toolchains/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu/bin:$PATH"
           make -C "$GITHUB_WORKSPACE/edk2/BaseTools" -j"$(nproc)" \
