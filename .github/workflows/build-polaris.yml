@@ -75,6 +75,7 @@ jobs:
           set -u
           mkdir -p "$WORKSPACE"
           export PATH="$GITHUB_WORKSPACE/toolchains/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu/bin:$PATH"
+          make -C "$GITHUB_WORKSPACE/edk2/BaseTools/Source/C/VfrCompile" VfrLexer.h
           make -C "$GITHUB_WORKSPACE/edk2/BaseTools" -j"$(nproc)" \
             BUILD_CFLAGS="-MD -fshort-wchar -fno-strict-aliasing -fwrapv -fno-delete-null-pointer-checks -Wall -Werror -Wno-error=use-after-free -Wno-error=dangling-pointer -Wno-error=array-bounds -Wno-error=stringop-overflow -Wno-error=stringop-overread -Wno-error=vla-parameter -Wno-deprecated-declarations -Wno-stringop-truncation -Wno-restrict -Wno-unused-result -nostdlib -g -O2" \
             BUILD_CXXFLAGS="-Wno-unused-result -Wno-register -O2"
